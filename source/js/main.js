@@ -24,6 +24,9 @@ $(function () {
 		});
 	}, 300);
 
+	retrieveSchedule();
+	$('#schedule').change(saveSchedule);
+
 	document.body.addEventListener("touchstart", function (e) {
 		if (e.target == drawCanvas) {
 			e.preventDefault();
@@ -122,6 +125,17 @@ $(document).keyup(function(e) {
     }
 });
 
+function saveSchedule() {
+	localStorage.setItem('schedule', $('#schedule').val());
+}
+
+function retrieveSchedule() {
+	let storedSchedule = localStorage.getItem('schedule');
+	if (storedSchedule != undefined) {
+		$('#schedule').val(storedSchedule);
+	}
+}
+
 // Initialize modal FAQ page
 function setUpModal() {
 	// Modal javascript, css, and html are based on http://www.w3schools.com/howto/howto_css_modals.asp
@@ -181,7 +195,7 @@ function touchstartHandler(evt) {
 function clickHandler(evt, touchType) {
   // Handle click on canvas
 }
-2
+
 function touchmoveHandler(e) {
 	e.preventDefault();
 	mousemoveHandler(e, true);
@@ -195,7 +209,7 @@ function mousemoveHandler(evt, isTouch) {
 
 function getSecondsSinceMidnight() {
 	let time = new Date();
-	return time.getSeconds() + time.getMinutes() * 60 + time.getHours() * 3600 + timeOffset;
+	return (time.getSeconds() + time.getMinutes() * 60 + time.getHours() * 3600 + timeOffset).mod(86400);
 }
 
 function getDayFraction(seconds) {
@@ -359,7 +373,7 @@ function getRelevantInterval(zoomLevel) {
 // *************** CANVAS FUNCTIONS ******************
 
 var cx = 600;
-var cy = 400;
+var cy = 600;
 var r1 = 200;
 var r2 = 300;
 var dx = 0;

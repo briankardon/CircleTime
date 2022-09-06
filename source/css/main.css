@@ -18,6 +18,13 @@
 	margin: auto;
 }
 
+#schedule {
+  height: 1200px;
+  overflow-y: visible;
+  overflow-x: scroll;
+  resize: none;
+}
+
 #drawCanvas {
   width: 100%;
   touch-action:none;
