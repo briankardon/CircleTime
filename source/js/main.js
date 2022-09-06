@@ -12,6 +12,7 @@ var drawCtx;
 var canvasID = 'drawCanvas';
 var updateCanvasJobID;
 var zoom = 1.2;
+var schedule;
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
@@ -25,7 +26,12 @@ $(function () {
 	}, 300);
 
 	retrieveSchedule();
-	$('#schedule').change(saveSchedule);
+	$('#schedule').on('keyup', function () {
+		saveSchedule();
+		schedule = parseSchedule();
+		});
+
+	$('#schedule').keyup();
 
 	document.body.addEventListener("touchstart", function (e) {
 		if (e.target == drawCanvas) {
@@ -286,6 +292,25 @@ function secondsToTimeString(seconds, twelveHour) {
 	return hours + ':' + minutes;
 }
 
+function getRelevantInterval(zoomLevel) {
+	if (zoomLevel == undefined) {
+		zoomLevel = zoom;
+	}
+	if (zoomLevel < 4) {
+		return 3600;
+	} else if (zoomLevel < 7.5) {
+		return 3600 / 2;
+	} else if (zoomLevel < 20) {
+		return 3600 / 4;
+	} else if (zoomLevel < 30) {
+		return 3600 / 6;
+	} else if (zoomLevel < 80) {
+		return 3600 / 12;
+	} else {
+		return 3600 / 60;
+	}
+}
+
 // *************** SCHEDULE PARSING ******************
 
 function parseSchedule() {
@@ -325,9 +350,11 @@ function parseSchedule() {
 }
 
 function drawSchedule() {
-	let schedule = parseSchedule();
 	let currentTime = getSecondsSinceMidnight();
 	let color;
+	if (schedule == undefined) {
+		return;
+	}
 	for (let k = 0; k < schedule.length; k++) {
 		if (schedule[k].start >= currentTime) {
 			// Event is entirely in the future
@@ -351,22 +378,30 @@ function drawSchedule() {
 	}
 }
 
-function getRelevantInterval(zoomLevel) {
-	if (zoomLevel == undefined) {
-		zoomLevel = zoom;
+function notify() {
+	if (schedule == undefined) {
+		return;
 	}
-	if (zoomLevel < 4) {
-		return 3600;
-	} else if (zoomLevel < 7.5) {
-		return 3600 / 2;
-	} else if (zoomLevel < 20) {
-		return 3600 / 4;
-	} else if (zoomLevel < 30) {
-		return 3600 / 6;
-	} else if (zoomLevel < 80) {
-		return 3600 / 12;
-	} else {
-		return 3600 / 60;
+	let currentTime = getSecondsSinceMidnight();
+	let timeUntilStart;
+	let timeUntilEnd;
+	let timeUntil5MinFromEnd;
+	let utterance;
+
+	for (let k = 0; k < schedule.length; k++) {
+		timeUntilStart = schedule[k].start - currentTime;
+		timeUntilEnd = schedule[k].stop - currentTime;
+		timeUntil5MinFromEnd = timeUntilEnd - 60*5;
+		if (timeUntilStart >= 0 && timeUntilStart < 1) {
+			utterance = new SpeechSynthesisUtterance("Now starting: "+schedule[k].text);
+			speechSynthesis.speak(utterance);
+		} else if (timeUntilEnd >= 3 && timeUntilEnd < 4) {
+			utterance = new SpeechSynthesisUtterance("Now ending: "+schedule[k].text);
+			speechSynthesis.speak(utterance);
+		} else if (timeUntil5MinFromEnd >= 0 && timeUntil5MinFromEnd < 1 && timeUntilStart < 0) {
+			utterance = new SpeechSynthesisUtterance("Ending in 5 minutes: "+schedule[k].text);
+			speechSynthesis.speak(utterance);
+		}
 	}
 }
 
@@ -695,4 +730,6 @@ function updateCanvas() {
 	drawSchedule();
 
 	drawCurrentTimeMarker(r1, r2);
+
+	notify();
 }
