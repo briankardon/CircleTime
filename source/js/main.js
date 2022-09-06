@@ -371,7 +371,7 @@ var dzoom = 0.1;
 var fontSize = 24;
 var timeOffset = 0;  // Amount to artifically add to current time
 var timeRotate = 0;  // Amount of time by which to rotate the "current time" marker
-var brightColors = ['#cc0000', '#00cc00', '#0000cc'];
+var brightColors = ['#cc0000', '#00aa00', '#0000cc'];
 var dimColors = ['#221111', '#112211', '#111122'];
 
 function updateTransform() {
