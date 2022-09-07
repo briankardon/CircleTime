@@ -13,6 +13,9 @@ var canvasID = 'drawCanvas';
 var updateCanvasJobID;
 var zoom = 1.2;
 var schedule;
+var startNotifications = false;
+var endNotifications = false;
+var preEndNotifications = false;
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
@@ -174,7 +177,6 @@ function setUpModal() {
 function openShortcutKeyDialog() {
 	$("#shortcutKeyDialog").dialog("open");
 }
-
 
 // ***************** MOUSE/TOUCH HANDLERS *********************
 
@@ -392,13 +394,13 @@ function notify() {
 		timeUntilStart = schedule[k].start - currentTime;
 		timeUntilEnd = schedule[k].stop - currentTime;
 		timeUntil5MinFromEnd = timeUntilEnd - 60*5;
-		if (timeUntilStart >= 0 && timeUntilStart < 1) {
+		if ($('#startNotifications')[0].checked && timeUntilStart >= 0 && timeUntilStart < 1) {
 			utterance = new SpeechSynthesisUtterance("Now starting: "+schedule[k].text);
 			speechSynthesis.speak(utterance);
-		} else if (timeUntilEnd >= 3 && timeUntilEnd < 4) {
+		} else if ($('#endNotifications')[0].checked && timeUntilEnd >= 3 && timeUntilEnd < 4) {
 			utterance = new SpeechSynthesisUtterance("Now ending: "+schedule[k].text);
 			speechSynthesis.speak(utterance);
-		} else if (timeUntil5MinFromEnd >= 0 && timeUntil5MinFromEnd < 1 && timeUntilStart < 0) {
+		} else if ($('#preEndNotifications')[0].checked && timeUntil5MinFromEnd >= 0 && timeUntil5MinFromEnd < 1 && timeUntilStart < 0) {
 			utterance = new SpeechSynthesisUtterance("Ending in 5 minutes: "+schedule[k].text);
 			speechSynthesis.speak(utterance);
 		}
