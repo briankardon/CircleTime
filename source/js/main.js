@@ -16,6 +16,7 @@ var schedule;
 var startNotifications = false;
 var endNotifications = false;
 var preEndNotifications = false;
+var audio = new Audio('static/alert.mp3');
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
@@ -77,7 +78,6 @@ $(function () {
 
   // Start update:
   updateCanvasJobID = window.setInterval(updateCanvas, 1000);
-
 });
 
 
@@ -394,15 +394,29 @@ function notify() {
 		timeUntilStart = schedule[k].start - currentTime;
 		timeUntilEnd = schedule[k].stop - currentTime;
 		timeUntil5MinFromEnd = timeUntilEnd - 60*5;
+		let intro;
+		let go = false;
 		if ($('#startNotifications')[0].checked && timeUntilStart >= 0 && timeUntilStart < 1) {
-			utterance = new SpeechSynthesisUtterance("Now starting: "+schedule[k].text);
-			speechSynthesis.speak(utterance);
+			go = true;
+			if (schedule[k].stop == undefined) {
+				// Short-term event
+				intro = "Now time for: ";
+			} else {
+				intro = "Now starting: ";
+			}
 		} else if ($('#endNotifications')[0].checked && timeUntilEnd >= 3 && timeUntilEnd < 4) {
-			utterance = new SpeechSynthesisUtterance("Now ending: "+schedule[k].text);
-			speechSynthesis.speak(utterance);
+			go = true;
+			intro = "Now ending: ";
 		} else if ($('#preEndNotifications')[0].checked && timeUntil5MinFromEnd >= 0 && timeUntil5MinFromEnd < 1 && timeUntilStart < 0) {
-			utterance = new SpeechSynthesisUtterance("Ending in 5 minutes: "+schedule[k].text);
-			speechSynthesis.speak(utterance);
+			go = true;
+			intro = "Ending in 5 minutes: ";
+		}
+		if (go) {
+			utterance = new SpeechSynthesisUtterance(intro + schedule[k].text);
+			audio.onended = function (event) {
+				speechSynthesis.speak(utterance);
+			}
+			audio.play();
 		}
 	}
 }
