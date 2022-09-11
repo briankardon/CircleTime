@@ -22,6 +22,13 @@ $(function () {
 	drawCanvas = document.getElementById(canvasID);
 	drawCtx = drawCanvas.getContext('2d');
 
+  $('#save-preset').on('click', function () {
+    let presetName = sanitizePresetName(prompt('Enter a name for this preset:'));
+    saveSchedule(presetName);
+  });
+
+  repopulatePresetMenu();
+
   // Set splash page to fade
 	setTimeout(function() {
 		$("#splash").fadeOut(1000, function() {
@@ -134,13 +141,88 @@ $(document).keyup(function(e) {
     }
 });
 
-function saveSchedule() {
-	localStorage.setItem('schedule', $('#schedule').val());
+function sanitizePresetName(displayName) {
+  return displayName.replace(/[^a-zA-Z0-9]/g, '-');
 }
 
-function retrieveSchedule() {
-	let storedSchedule = localStorage.getItem('schedule');
-	if (storedSchedule != undefined) {
+function presetNameToId(presetName) {
+  let id = 'schedule_' + presetName;
+  return id;
+}
+
+function createPresetElement(presetName) {
+  let id = presetNameToId(presetName);
+  $('#preset-list').append(
+    $(
+    `<div id="${id}" class="dropdown-content">
+      <h3 class="dropdown-action retrieve-preset buttonish">${presetName}</h3>
+      <svg class="dropdown-action mini delete-preset buttonish" viewBox="0 0 10 10">
+          <path stroke="black" stroke-width="1" fill="none" d="M2,2,8,8" />
+          <path stroke="black" stroke-width="1" fill="none" d="M2,8,8,2" />
+      </svg>
+    </div>`
+    )
+  );
+  $(`#${id}`).children('.retrieve-preset').on('click', function () {
+    retrieveSchedule(presetName);
+  });
+  $(`#${id}`).children('.delete-preset').on('click', function () {
+    deletePreset(presetName);
+  });
+  $
+}
+
+function deletePreset(presetName) {
+  let id = presetNameToId(presetName);
+  localStorage.removeItem(id);
+  $(`#${id}`).remove();
+}
+
+function saveSchedule(presetName) {
+  let id;
+  if (presetName == undefined) {
+    presetName = '|schedule|';
+    id = presetName;
+  } else {
+    createPresetElement(presetName);
+    id = presetNameToId(presetName);
+  }
+	localStorage.setItem(id, $('#schedule').val());
+}
+
+function repopulatePresetMenu() {
+  $('#preset-list').children().remove();
+  let presetNames = getAllPresetNames();
+  for (let k = 0; k < presetNames.length; k++) {
+    if (presetNames[k] != '|schedule|') {
+      createPresetElement(presetNames[k], presetNames[k]);
+    }
+  }
+}
+
+function getAllPresetNames() {
+  let presetNames = [];
+  let keys = Object.keys(localStorage);
+  for (let k = 0; k < keys.length; k++) {
+    if (keys[k] == '|schedule|') {
+      // This is the current schedule
+      presetNames[presetNames.length] = '|schedule|';
+    } else if (keys[k].match(/schedule_[a-zA-Z0-9]+/)) {
+      presetNames[presetNames.length] = keys[k].replace(/schedule_/, '');
+    }
+  }
+  return presetNames;
+}
+
+function retrieveSchedule(presetName) {
+  let storedSchedule, id;
+  if (presetName == undefined) {
+    id = '|schedule|';
+  } else {
+    id = presetNameToId(presetName);
+  }
+  storedSchedule = localStorage.getItem(id);
+  if (storedSchedule != undefined) {
 		$('#schedule').val(storedSchedule);
 	}
 }

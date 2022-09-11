@@ -2,6 +2,82 @@
 /* Page content invisible at first during splash */
 #content {
    display: none;
+   padding-top: 7%;
+}
+
+.buttonish {
+  cursor: default;
+  caret-color: transparent;
+}
+.buttonish:hover {
+  background-color: #c0c0c0;
+}
+.dropdown-menu {
+  display: inline;
+  position: absolute;
+}
+.dropdown-content {
+  z-index: 200;
+  position: relative;
+  top: 0px;
+  right: 0px;
+  padding: 0px;
+  margin: 0px;
+}
+.dropdown-button {
+  display: inline;
+  position: relative;
+}
+.dropdown-menu:hover .dropdown-contents {
+  display: block;
+}
+.dropdown-contents {
+  box-shadow: 0px 8px 16px 0px rgba(0,0,0,0.2);
+  background-color: #f0f0f0;
+  color: #000000;
+  border-radius: 5px;
+  padding: 2px 2px;
+  display: none;
+}
+button.dropdown-action,
+h3.dropdown-action,
+svg.dropdown-action {
+  background-color: #f0f0f0;
+  margin: 0px;
+  display: inline;
+  border-radius: 5px;
+  padding: 0px 10px;
+  vertical-align: middle;
+}
+button.dropdown-action.mini,
+h3.dropdown-action.mini,
+svg.dropdown-action.mini {
+  padding: 0px;
+  margin: 0px;
+  border-style: none;
+  padding: 10px 10px;
+  width: 1em;
+  height: 1em;
+  vertical-align: middle;
+  border-radius: 5px;
+  float: right;
+}
+
+.floating-menu {
+  background: black;
+  padding: 5px;
+  height: 7%;
+  width: 100%;
+  z-index: 100;
+  position: fixed;
+  top: 0px;
+  right: 0px;
+}
+
+.floating-content {
+  display: inline;
+  color: white;
+  margin: 0 0.5em;
 }
 
 #splash {
