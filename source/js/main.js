@@ -64,6 +64,72 @@ $(function () {
 		}
 	}, { passive: false });
 
+  //Keyboard shortcuts:
+  $(document).keypress(function(e) {
+  	let interval;
+  	switch(e.key) {
+  		case 'x':
+  			break;
+  		case 'ArrowUp':
+  			if (e.shiftKey) {
+  				zoom += dzoom;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+  		case 'ArrowDown':
+  			if (e.shiftKey) {
+  				zoom -= dzoom;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+  		case 'ArrowLeft':
+  			if (!e.ctrlKey && e.shiftKey) {
+  				interval = getRelevantInterval();
+  				timeRotate = Math.round((timeRotate - interval)/interval)*interval;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+  			if (e.ctrlKey && e.shiftKey) {
+  				interval = getRelevantInterval();
+  				timeOffset = Math.round((timeOffset - interval)/interval)*interval;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+  		case 'ArrowRight':
+  			if (!e.ctrlKey && e.shiftKey) {
+  				interval = getRelevantInterval();
+  				timeRotate = Math.round((timeRotate + interval)/interval)*interval;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+  			if (e.ctrlKey && e.shiftKey) {
+  				interval = getRelevantInterval();
+  				timeOffset = Math.round((timeOffset + interval)/interval)*interval;
+  				updateCanvas();
+          stopPropation();
+          e.preventDefault();
+  				break;
+  			}
+      }
+  });
+  $(document).keyup(function(e) {
+  	switch(e.key) {
+  		case 'x':
+  			break;
+      }
+  });
+
+
 	// Set up modal
 	setUpModal();
 
@@ -89,60 +155,6 @@ $(function () {
   updateCanvasJobID = window.setInterval(updateCanvas, 1000);
 });
 
-
-//Keyboard shortcuts:
-$(document).keydown(function(e) {
-	let interval;
-	switch(e.key) {
-		case 'x':
-			break;
-		case 'ArrowUp':
-			if (e.shiftKey) {
-				zoom += dzoom;
-				updateCanvas();
-				break;
-			}
-		case 'ArrowDown':
-			if (e.shiftKey) {
-				zoom -= dzoom;
-				updateCanvas();
-				break;
-			}
-		case 'ArrowLeft':
-			if (!e.ctrlKey && e.shiftKey) {
-				interval = getRelevantInterval();
-				timeRotate = Math.round((timeRotate - interval)/interval)*interval;
-				updateCanvas();
-				break;
-			}
-			if (e.ctrlKey && e.shiftKey) {
-				interval = getRelevantInterval();
-				timeOffset = Math.round((timeOffset - interval)/interval)*interval;
-				updateCanvas();
-				break;
-			}
-		case 'ArrowRight':
-			if (!e.ctrlKey && e.shiftKey) {
-				interval = getRelevantInterval();
-				timeRotate = Math.round((timeRotate + interval)/interval)*interval;
-				updateCanvas();
-				break;
-			}
-			if (e.ctrlKey && e.shiftKey) {
-				interval = getRelevantInterval();
-				timeOffset = Math.round((timeOffset + interval)/interval)*interval;
-				updateCanvas();
-				break;
-			}
-    }
-});
-$(document).keyup(function(e) {
-	switch(e.key) {
-		case 'x':
-			break;
-    }
-});
-
 function sanitizePresetName(displayName) {
   return displayName.replace(/[^a-zA-Z0-9]/g, '-');
 }
@@ -157,7 +169,7 @@ function createPresetElement(presetName) {
   $('#preset-list').append(
     $(
     `<div id="${id}" class="dropdown-content">
-      <h3 class="dropdown-action retrieve-preset buttonish">${presetName}</h3>
+      <h4 class="dropdown-action retrieve-preset buttonish">${presetName}</h4>
       <svg class="dropdown-action mini delete-preset buttonish" viewBox="0 0 10 10">
           <path stroke="black" stroke-width="1" fill="none" d="M2,2,8,8" />
           <path stroke="black" stroke-width="1" fill="none" d="M2,8,8,2" />
@@ -359,7 +371,9 @@ function parseTimeStamp(timeStamp) {
 
 	if (pm) {
 		hour = hour + 12;
-	}
+	} else {
+
+  }
 
 	return minute * 60 + hour * 3600;
 }
@@ -373,6 +387,9 @@ function secondsToTimeString(seconds, twelveHour) {
 	let hours = now.getHours();
 	if (twelveHour) {
 		hours = ((hours-1) % 12) + 1;
+    if (hours == 0) {
+      hours = 12;
+    }
 	}
 	let minutes = now.getMinutes();
 	if (minutes < 10) {

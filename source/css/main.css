@@ -50,6 +50,7 @@
 }
 button.dropdown-action,
 h3.dropdown-action,
+h4.dropdown-action,
 svg.dropdown-action {
   background-color: #f0f0f0;
   margin: 0px;
@@ -60,6 +61,7 @@ svg.dropdown-action {
 }
 button.dropdown-action.mini,
 h3.dropdown-action.mini,
+h4.dropdown-action.mini,
 svg.dropdown-action.mini {
   padding: 0px;
   margin: 0px;

@@ -14,12 +14,32 @@
 <body>
 	<div class="floating-menu">
 		<h3 class="floating-content">CircleTime</h3>
-		<h3 id="save-preset" class="floating-content buttonish">Save</h3>
+		<h4 id="save-preset" class="floating-content buttonish">Save</h4>
 		<div class="dropdown-menu floating-content">
-			<h3 class="dropdown-button buttonish">Presets</h3>
+			<h4 class="dropdown-button buttonish">Presets</h4>
 			<div id="preset-list" class="dropdown-contents">
 			</div>
 		</div>
+
+		<div class="dropdown-menu floating-content">
+			<h4 class="dropdown-button buttonish">Notifications</h4>
+			<div id="preset-list" class="dropdown-contents">
+				<label class="dropdown-content" for="startNotifications">
+					<input class="dropdown-action mini" title="Event start notification" type="checkbox" id="startNotifications" name="startNotifications" checked>
+					<span class="dropdown-action" title="Event start notification">Start</span>
+				</label>
+				<label class="dropdown-content" for="endNotifications">
+					<input class="dropdown-action mini" title="Event end notification" type="checkbox" id="endNotifications" name="endNotifications">
+					<span class="dropdown-action" title="Event end notification">End</span>
+				</label>
+				<label class="dropdown-content" for="preEndNotifications">
+					<input class="dropdown-action mini" title="5 min until event end notification" type="checkbox" id="preEndNotifications" name="preEndNotifications">
+					<span class="dropdown-action" title="5 min until event end notification">5 minutes until end</span>
+				</label>
+			</div>
+		</div>
+
+
 		<h3 id="current-time" class="floating-content"></h3>
 	</div>
 	<div id="content">
@@ -33,21 +53,6 @@
 				</div>
 
 			</div>
-			<div class="row">
-				<label for="startNotifications">
-					<input title="Event start notification" type="checkbox" id="startNotifications" name="startNotifications" checked>
-					<span title="Event start notification">Start notifications</span>
-				</label>
-				<label for="endNotifications">
-					<input title="Event end notification" type="checkbox" id="endNotifications" name="endNotifications">
-					<span title="Event end notification">End notifications</span>
-				</label>
-				<label for="preEndNotifications">
-					<input title="5 min until event end notification" type="checkbox" id="preEndNotifications" name="preEndNotifications">
-					<span title="5 min until event end notification">5 minutes until end notifications</span>
-				</label>
-			</div>
-
       <a id="FAQLink" href="#">FAQ</a>
     </div>
 
