@@ -7,20 +7,21 @@
 	<script src="https://ajax.googleapis.com/ajax/libs/jqueryui/1.12.1/jquery-ui.min.js"></script>
   <script src='js/spectrum.js'></script>
 	<script id="mainjs" src="js/main.js?1.23"></script>
-	<link href='https://fonts.googleapis.com/css?family=Raleway:400,300,600' rel='stylesheet' type='text/css'>
+	<link href='https://fonts.googleapis.com/css?family=Baloo 2:400,300,600' rel='stylesheet' type='text/css'>
   <link rel="stylesheet" href="css/skeleton.css">
   <link rel="stylesheet" href="css/main.css">
 </head>
 <body>
-	<nav class="floating-menu">
+	<div class="floating-menu">
 		<h3 class="floating-content">CircleTime</h3>
 		<h3 id="save-preset" class="floating-content buttonish">Save</h3>
-		<span class="dropdown-menu floating-content">
+		<div class="dropdown-menu floating-content">
 			<h3 class="dropdown-button buttonish">Presets</h3>
 			<div id="preset-list" class="dropdown-contents">
 			</div>
-		</span>
-	</nav>
+		</div>
+		<h3 id="current-time" class="floating-content"></h3>
+	</div>
 	<div id="content">
     <div class="main">
 			<div class="row">

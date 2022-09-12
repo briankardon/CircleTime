@@ -184,10 +184,11 @@ function saveSchedule(presetName) {
     presetName = '|schedule|';
     id = presetName;
   } else {
-    createPresetElement(presetName);
+    // createPresetElement(presetName);
     id = presetNameToId(presetName);
   }
 	localStorage.setItem(id, $('#schedule').val());
+  repopulatePresetMenu();
 }
 
 function repopulatePresetMenu() {
@@ -505,8 +506,8 @@ function notify() {
 
 // *************** CANVAS FUNCTIONS ******************
 
-var cx = 600;
-var cy = 600;
+var cx = 500;
+var cy = 400;
 var r1 = 200;
 var r2 = 300;
 var dx = 0;
@@ -799,17 +800,21 @@ function labelTimes() {
 }
 
 function drawTimeHeader() {
+
 	let seconds = getSecondsSinceMidnight();
 	let timeStamp = secondsToTimeString(seconds);
 	if (Math.floor(seconds) % 2 == 0) {
 		timeStamp = timeStamp.replace(':', ' ');
 	}
-	drawCtx.save();
-	drawCtx.font = fontSize*2 + 'px Arial';
-	let mt = drawCtx.measureText(timeStamp);
-	let y = -(r2 + 40*(Math.pow(2, -zoom)) + 40 / Math.pow(zoom, 0.4));
-	drawCtx.fillText(timeStamp, -mt.width/2, y);
-	drawCtx.restore();
+
+  $('#current-time').html(timeStamp);
+
+	// drawCtx.save();
+	// drawCtx.font = fontSize*2 + 'px Arial';
+	// let mt = drawCtx.measureText(timeStamp);
+	// let y = -(r2 + 40*(Math.pow(2, -zoom)) + 40 / Math.pow(zoom, 0.4));
+	// drawCtx.fillText(timeStamp, -mt.width/2, y);
+	// drawCtx.restore();
 }
 
 function updateCanvas() {

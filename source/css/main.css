@@ -2,33 +2,39 @@
 /* Page content invisible at first during splash */
 #content {
    display: none;
-   padding-top: 7%;
+   padding-top: 45px;
+}
+
+#current-time {
+  float: right;
 }
 
 .buttonish {
   cursor: default;
   caret-color: transparent;
+  transition-duration: 0.25s;
 }
 .buttonish:hover {
   background-color: #c0c0c0;
 }
 .dropdown-menu {
   display: inline;
-  position: absolute;
+  position: relative;
 }
 .dropdown-content {
   z-index: 200;
-  position: relative;
-  top: 0px;
-  right: 0px;
+  /* position: relative; */
+  /* top: 0px; */
+  /* right: 0px; */
   padding: 0px;
   margin: 0px;
+  display: block;
 }
 .dropdown-button {
   display: inline;
   position: relative;
 }
-.dropdown-menu:hover .dropdown-contents {
+.dropdown-menu:hover > .dropdown-contents {
   display: block;
 }
 .dropdown-contents {
@@ -38,13 +44,16 @@
   border-radius: 5px;
   padding: 2px 2px;
   display: none;
+  position: absolute;
+  left: 0;
+  white-space: nowrap;
 }
 button.dropdown-action,
 h3.dropdown-action,
 svg.dropdown-action {
   background-color: #f0f0f0;
   margin: 0px;
-  display: inline;
+  display: inline-block;
   border-radius: 5px;
   padding: 0px 10px;
   vertical-align: middle;
@@ -60,13 +69,14 @@ svg.dropdown-action.mini {
   height: 1em;
   vertical-align: middle;
   border-radius: 5px;
-  float: right;
+  display: inline-block;
+  /* float: right; */
 }
 
 .floating-menu {
   background: black;
-  padding: 5px;
-  height: 7%;
+  /* padding: 5px; */
+  height: 45px;
   width: 100%;
   z-index: 100;
   position: fixed;
@@ -75,7 +85,7 @@ svg.dropdown-action.mini {
 }
 
 .floating-content {
-  display: inline;
+  display: inline-block;
   color: white;
   margin: 0 0.5em;
 }
@@ -146,7 +156,7 @@ Removes the underline with text decoration = none.*/
   padding: 3px 3px;
   text-decoration: none;
   font-size: 100%;
-  font-family: "Raleway";
+  /* font-family: "Raleway"; */
 }
 
 label {
