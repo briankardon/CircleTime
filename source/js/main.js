@@ -23,7 +23,11 @@ $(function () {
 	drawCtx = drawCanvas.getContext('2d');
 
   $('#save-preset').on('click', function () {
-    let presetName = sanitizePresetName(prompt('Enter a name for this preset:'));
+    let presetName = prompt('Enter a name for this preset:');
+    if (presetName == null) {
+      return;
+    }
+    presetName = sanitizePresetName(presetName);
     saveSchedule(presetName);
   });
 
@@ -76,8 +80,6 @@ $(function () {
 	$("#"+canvasID).on('touchend', touchendHandler);
 	$("#"+canvasID).on('mousemove', mousemoveHandler);
 	$("#"+canvasID).on('touchmove', touchmoveHandler);
-	$("#symmetryTransparency").on('change', updateCanvas);
-	$("#drawTransparency").on('change', updateCanvas);
 
 	// Set version number
 	var version = '1.23';
@@ -226,6 +228,8 @@ function retrieveSchedule(presetName) {
   if (storedSchedule != undefined) {
 		$('#schedule').val(storedSchedule);
 	}
+  schedule = parseSchedule();
+  updateCanvas();
 }
 
 // Initialize modal FAQ page
