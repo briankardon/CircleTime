@@ -65,7 +65,7 @@ $(function () {
 	}, { passive: false });
 
   //Keyboard shortcuts:
-  $(document).keypress(function(e) {
+  $(document).keyup(function(e) {
   	let interval;
   	switch(e.key) {
   		case 'x':
@@ -74,7 +74,7 @@ $(function () {
   			if (e.shiftKey) {
   				zoom += dzoom;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
@@ -82,7 +82,7 @@ $(function () {
   			if (e.shiftKey) {
   				zoom -= dzoom;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
@@ -91,7 +91,7 @@ $(function () {
   				interval = getRelevantInterval();
   				timeRotate = Math.round((timeRotate - interval)/interval)*interval;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
@@ -99,7 +99,7 @@ $(function () {
   				interval = getRelevantInterval();
   				timeOffset = Math.round((timeOffset - interval)/interval)*interval;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
@@ -108,7 +108,7 @@ $(function () {
   				interval = getRelevantInterval();
   				timeRotate = Math.round((timeRotate + interval)/interval)*interval;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
@@ -116,7 +116,7 @@ $(function () {
   				interval = getRelevantInterval();
   				timeOffset = Math.round((timeOffset + interval)/interval)*interval;
   				updateCanvas();
-          stopPropation();
+          e.stopPropagation();
           e.preventDefault();
   				break;
   			}
