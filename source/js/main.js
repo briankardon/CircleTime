@@ -17,13 +17,14 @@ var startNotifications = false;
 var endNotifications = false;
 var preEndNotifications = false;
 var audio = new Audio('static/alert.mp3');
+var lastPresetName = "";
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
 	drawCtx = drawCanvas.getContext('2d');
 
   $('#save-preset').on('click', function () {
-    let presetName = prompt('Enter a name for this preset:');
+    let presetName = prompt('Enter a name for this preset:', lastPresetName);
     if (presetName == null) {
       return;
     }
@@ -235,6 +236,7 @@ function retrieveSchedule(presetName) {
     id = '|schedule|';
   } else {
     id = presetNameToId(presetName);
+    lastPresetName = presetName;
   }
   storedSchedule = localStorage.getItem(id);
   if (storedSchedule != undefined) {
