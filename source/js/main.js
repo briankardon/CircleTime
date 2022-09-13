@@ -21,6 +21,40 @@ var lastPresetName = "";
 const synth = window.speechSynthesis;
 var voices;
 var voiceIdx = 0;
+var months = [
+  'January',
+  'February',
+  'March',
+  'April',
+  'May',
+  'June',
+  'July',
+  'August',
+  'September',
+  'October',
+  'November',
+  'December'
+];
+var weekDays = [
+  'Sunday',
+  'Monday',
+  'Tuesday',
+  'Wednesday',
+  'Thursday',
+  'Friday',
+  'Saturday'
+];
+function getDateEnding(date) {
+  if (date == 1) {
+    return 'st';
+  } else if (date == 2) {
+    return 'nd';
+  } else if (date == 3) {
+    return 'rd';
+  } else {
+    return 'th';
+  }
+}
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
@@ -246,7 +280,7 @@ function saveSchedule(presetName) {
 
 function repopulatePresetMenu() {
   $('#preset-list').children().remove();
-  let presetNames = getAllPresetNames();
+  let presetNames = getAllPresetNames().sort();
   for (let k = 0; k < presetNames.length; k++) {
     if (presetNames[k] != '|schedule|') {
       createPresetElement(presetNames[k], presetNames[k]);
@@ -416,6 +450,13 @@ function parseTimeStamp(timeStamp) {
   }
 
 	return minute * 60 + hour * 3600;
+}
+
+function getDateString() {
+  let date = new Date();
+  date.setSeconds(date.getSeconds() + timeOffset);
+  let dateString = `${weekDays[date.getDay()]} ${months[date.getMonth()]} ${date.getDate()}${getDateEnding(date.getDate())}`;
+  return dateString;
 }
 
 function secondsToTimeString(seconds, twelveHour) {
@@ -863,14 +904,14 @@ function labelTimes() {
 }
 
 function drawTimeHeader() {
-
+  let dateStamp = getDateString();
 	let seconds = getSecondsSinceMidnight();
 	let timeStamp = secondsToTimeString(seconds);
 	if (Math.floor(seconds) % 2 == 0) {
 		timeStamp = timeStamp.replace(':', ' ');
 	}
 
-  $('#current-time').html(timeStamp);
+  $('#current-time').html(dateStamp + ' ' + timeStamp);
 
 	// drawCtx.save();
 	// drawCtx.font = fontSize*2 + 'px Arial';
