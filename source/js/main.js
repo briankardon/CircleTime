@@ -18,6 +18,9 @@ var endNotifications = false;
 var preEndNotifications = false;
 var audio = new Audio('static/alert.mp3');
 var lastPresetName = "";
+const synth = window.speechSynthesis;
+var voices;
+var voiceIdx = 0;
 
 $(function () {
 	drawCanvas = document.getElementById(canvasID);
@@ -33,6 +36,32 @@ $(function () {
   });
 
   repopulatePresetMenu();
+
+  voices = synth.getVoices();
+
+  repopulateVoiceNames();
+
+  voiceIdx = localStorage.getItem('voiceIdx');
+  if (voiceIdx == undefined) {
+    voiceIdx = 0;
+  } else {
+    $('#voiceChoice').val(voiceIdx);
+  }
+
+  $('#voiceChoice').on('change', function () {
+    voiceIdx = $('#voiceChoice').val();
+    localStorage.setItem('voiceIdx', voiceIdx);
+  });
+
+  $('#testVoice').on('click', function () {
+    let utterance = new SpeechSynthesisUtterance("Good day, how can I be of service?");
+    let voiceIdx = $('#voiceChoice').val();
+    utterance.voice = voices[voiceIdx];
+    audio.onended = function (event) {
+      speechSynthesis.speak(utterance);
+    }
+    audio.play();
+  });
 
   // Set splash page to fade
 	setTimeout(function() {
@@ -155,6 +184,15 @@ $(function () {
   // Start update:
   updateCanvasJobID = window.setInterval(updateCanvas, 1000);
 });
+
+function repopulateVoiceNames() {
+  $('#voiceChoice').empty();
+  let voiceName;
+  for (let k = 0; k < voices.length; k++) {
+    voiceName = voices[k].name;
+    $('#voiceChoice').append($(`<option value="${k}">${voiceName}</option>`))
+  }
+}
 
 function sanitizePresetName(displayName) {
   return displayName.replace(/[^a-zA-Z0-9]/g, '-');
@@ -519,6 +557,8 @@ function notify() {
 		}
 		if (go) {
 			utterance = new SpeechSynthesisUtterance(intro + schedule[k].text);
+      let voiceIdx = $('#voiceChoice').val();
+      utterance.voice = voices[voiceIdx];
 			audio.onended = function (event) {
 				speechSynthesis.speak(utterance);
 			}
