@@ -44,6 +44,26 @@ var weekDays = [
   'Friday',
   'Saturday'
 ];
+var intros = [
+  "It's time to get cracking on: ",
+  "Would you look at the time, it's time for: ",
+  "It's jolly well time for: ",
+  "You layabouts better get started on: ",
+  "I command you in the name of King Charles to start: ",
+  "Huh what I was sleeping oh yes it's time for: ",
+  "It's time for cough cough cough sorry, it's time for: ",
+  "Blimey, it's time for: ",
+  "Cheerio chaps, let's start in on: ",
+  "I'm just chuffed to inform you that it's time for: ",
+  "Smashing good news, it's time for: ",
+  "I'm tickled pink to have the honor of informing you that it's time for: ",
+  "Oy mate, look at the time, it's time for: ",
+  "Don't get cheesed off, but it's time for: ",
+  "Better leg it chaps, it's time for: ",
+  "If we don't want this place to go to pot, we'd better get started on: ",
+  "You're off your trolley if you don't think it's time for: ",
+]
+
 function getDateEnding(date) {
   if (date == 1) {
     return 'st';
@@ -532,8 +552,112 @@ function parseSchedule() {
 		schedule[j].start = parseTimeStamp(startTimeStamp);
 		schedule[j].stop = parseTimeStamp(stopTimeStamp);
 		schedule[j].text = text;
+    schedule[j].ring = 0;
+    schedule[j].ringSpan = 1;
+    schedule[j].numRings = 1;
+    schedule[j].overlaps = new Set();
 	}
+
+  // Sort schedule by start times:
+  schedule.sort((a, b) => {a.start - b.start});
+
+  let overlapGroups = [];
+  let eventA, eventB;
+  let foundGroup, foundOverlap;
+  let newGroup;
+  for (let k = 0; k < schedule.length; k++) {
+    eventA = schedule[k];
+    foundOverlap = false;
+    for (let j = 0; j < k; j++) {
+      eventB = schedule[j];
+      if (checkOverlap(eventA, eventB)) {
+        eventA.overlaps.add(eventB);
+        eventB.overlaps.add(eventA);
+        foundOverlap = true;
+        foundGroup = false;
+        for (let overlapGroup of overlapGroups) {
+          if (overlapGroup.has(eventA) || overlapGroup.has(eventB)) {
+            overlapGroup.add(eventA);
+            overlapGroup.add(eventB);
+            foundGroup = true;
+            break;
+          }
+        }
+        if (!foundGroup) {
+          newGroup = new Set();
+          newGroup.add(eventA);
+          newGroup.add(eventB);
+          overlapGroups[overlapGroups.length] = newGroup;
+        }
+      }
+    }
+    if (!foundOverlap) {
+      newGroup = new Set();
+      newGroup.add(eventA);
+      overlapGroups[overlapGroups.length] = newGroup;
+    }
+  }
+
+  for (let overlapGroup of overlapGroups) {
+    // Sort overlap groups
+    overlapGroup = Array.from(overlapGroup).sort();
+    overlapGroup = assignRings(overlapGroup);
+    // Loop over events within group and assign rings
+  }
 	return schedule;
+}
+
+function assignRings(overlapGroup) {
+  // Set all rings back to default
+  for (let eventA of overlapGroup) {
+    eventA.ring = 0;
+    eventA.ringSpan = 1;
+    eventA.numRings = 1;
+  };
+
+  let overlapList, noOverlaps;
+  let maxRingNum = 0;
+  for (let eventA of overlapGroup) {
+    overlapList = [];
+    noOverlaps = false;
+    while (!noOverlaps) {
+      noOverlaps = true;
+      for (let eventB of overlapGroup) {
+        if (eventA != eventB && eventA.ring == eventB.ring && checkOverlap(eventA, eventB)) {
+          eventB.ring += 1;
+          noOverlaps = false;
+          break
+        }
+        // Get list of events within eventA's ring that overlap eventA
+        overlapList = overlapGroup.filter(eventB => eventA != eventB && eventA.ring == eventB.ring && checkOverlap(eventA, eventB));
+      }
+    }
+    if (eventA.ring + 1 > maxRingNum) {
+      maxRingNum = eventA.ring + 1;
+    }
+  }
+  for (let eventA of overlapGroup) {
+    // Record the maximum number of rings in this overlap group
+    eventA.numRings = maxRingNum;
+    // Figure out if the event can span multiple rings
+    eventA.ringSpan = maxRingNum;
+    let outerRingDiffs = Array.from(eventA.overlaps).filter(eventB => eventB.ring > eventA.ring).map(eventB => eventB.ring - eventA.ring);
+    eventA.ringSpan = Math.min(eventA.numRings - eventA.ring, ...outerRingDiffs);
+  }
+  return overlapGroup;
+}
+
+function checkOverlap(eventA, eventB) {
+  if (eventB.start > eventA.start && eventB.start < eventA.stop) {
+    return true;
+  } else if (eventB.stop > eventA.start && eventB.stop < eventA.stop) {
+    return true;
+  } else if (eventA.start > eventB.start && eventA.start < eventB.stop) {
+    return true;
+  } else if (eventA.stop > eventB.start && eventA.stop < eventB.stop) {
+    return true;
+  }
+  return false;
 }
 
 function drawSchedule() {
@@ -542,25 +666,37 @@ function drawSchedule() {
 	if (schedule == undefined) {
 		return;
 	}
-	for (let k = 0; k < schedule.length; k++) {
-		if (schedule[k].start >= currentTime) {
+
+  let rA, rB, dR;
+  let overlapGroup;
+  let eventA;
+  let colorIdx = 0;
+  let borderWidth = lineWidth*4;
+
+
+	for (let eventA of schedule) {
+		if (eventA.start >= currentTime) {
 			// Event is entirely in the future
-			color = brightColors[k % brightColors.length];
-		} else if (schedule[k].stop <= currentTime || schedule[k].stop == undefined) {
+			color = brightColors[colorIdx % brightColors.length];
+		} else if (eventA.stop <= currentTime || eventA.stop == undefined) {
 			// Event is entirely in the past
-			color = dimColors[k % dimColors.length];
+			color = dimColors[colorIdx % dimColors.length];
 		} else {
 			// Event is ongoing
 			color = {
-				start: dimColors[k % dimColors.length],
-				end: brightColors[k % brightColors.length],
-				fraction: (currentTime - schedule[k].start) / (schedule[k].stop - schedule[k].start)
+				start: dimColors[colorIdx % dimColors.length],
+				end: brightColors[colorIdx % brightColors.length],
+				fraction: (currentTime - eventA.start) / (eventA.stop - eventA.start)
 			}
 		}
-		if (schedule[k].stop != undefined) {
-			drawLongEvent(r1, r2, schedule[k].start, schedule[k].stop, schedule[k].text, color);
+		if (eventA.stop != undefined) {
+      dR = (r2 - r1 - borderWidth) / (eventA.numRings);
+      rA = r1 + eventA.ring * dR;
+      rB = rA + dR * eventA.ringSpan;
+			drawLongEvent(rA, rB, eventA.start, eventA.stop, eventA.text, color);
+      colorIdx += 1;
 		} else {
-			drawShortEvent(r1, r2, schedule[k].start, schedule[k].text, color);
+			drawShortEvent(r1, r2, eventA.start, eventA.text, color);
 		}
 	}
 }
@@ -575,19 +711,19 @@ function notify() {
 	let timeUntil5MinFromEnd;
 	let utterance;
 
-	for (let k = 0; k < schedule.length; k++) {
-		timeUntilStart = schedule[k].start - currentTime;
-		timeUntilEnd = schedule[k].stop - currentTime;
+	for (let eventA of schedule) {
+		timeUntilStart = eventA.start - currentTime;
+		timeUntilEnd = eventA.stop - currentTime;
 		timeUntil5MinFromEnd = timeUntilEnd - 60*5;
 		let intro;
 		let go = false;
 		if ($('#startNotifications')[0].checked && timeUntilStart >= 0 && timeUntilStart < 1) {
 			go = true;
-			if (schedule[k].stop == undefined) {
+			if (eventA.stop == undefined) {
 				// Short-term event
-				intro = "Now time for: ";
+        intro = intros[Math.floor(Math.random() * intros.length)];
 			} else {
-				intro = "Now starting: ";
+        intro = intros[Math.floor(Math.random() * intros.length)];
 			}
 		} else if ($('#endNotifications')[0].checked && timeUntilEnd >= 3 && timeUntilEnd < 4) {
 			go = true;
@@ -597,7 +733,7 @@ function notify() {
 			intro = "Ending in 5 minutes: ";
 		}
 		if (go) {
-			utterance = new SpeechSynthesisUtterance(intro + schedule[k].text);
+			utterance = new SpeechSynthesisUtterance(intro + eventA.text);
       let voiceIdx = $('#voiceChoice').val();
       utterance.voice = voices[voiceIdx];
 			audio.onended = function (event) {
@@ -710,8 +846,8 @@ function drawSegment(r1, r2, a1, a2, color) {
 	drawCtx.fillStyle = fillStyle;
   drawCtx.beginPath();
 
-  drawCtx.arc(0, 0, r1+borderWidth, da-angleBorder, angleBorder, true);
-  drawCtx.arc(0, 0, r2-borderWidth, angleBorder, da-angleBorder, false);
+  drawCtx.arc(0, 0, r1+borderWidth, da-angleBorder, angleBorder,    true);
+  drawCtx.arc(0, 0, r2,             angleBorder,    da-angleBorder, false);
 
 	// drawCtx.arc(0, 0, r1+borderWidth, da, 0, true);
   // drawCtx.arc(0, 0, r2-borderWidth, 0, da, false);
