@@ -21,6 +21,7 @@ var lastPresetName = "";
 const synth = window.speechSynthesis;
 var voices;
 var voiceIdx = 0;
+var introText = [];
 var months = [
   'January',
   'February',
@@ -44,7 +45,7 @@ var weekDays = [
   'Friday',
   'Saturday'
 ];
-var intros = [
+var defaultIntroText = [
   "It's time to get cracking on: ",
   "Would you look at the time, it's time for: ",
   "It's jolly well time for: ",
@@ -94,6 +95,18 @@ $(function () {
   voices = synth.getVoices();
 
   repopulateVoiceNames();
+
+  introText = localStorage.getItem('introText');
+  if (introText == undefined) {
+    introText = defaultIntroText;
+  }
+  console.log('introText is', introText, typeof(introText));
+  $('#introText').val(introText.join('\n'))
+
+  $('#introText').on('change', function () {
+    introText = $('#introText').val().split('\n');
+    localStorage.setItem('introText', introText);
+  });
 
   voiceIdx = localStorage.getItem('voiceIdx');
   if (voiceIdx == undefined) {
@@ -721,9 +734,9 @@ function notify() {
 			go = true;
 			if (eventA.stop == undefined) {
 				// Short-term event
-        intro = intros[Math.floor(Math.random() * intros.length)];
+        intro = introText[Math.floor(Math.random() * introText.length)];
 			} else {
-        intro = intros[Math.floor(Math.random() * intros.length)];
+        intro = introText[Math.floor(Math.random() * introText.length)];
 			}
 		} else if ($('#endNotifications')[0].checked && timeUntilEnd >= 3 && timeUntilEnd < 4) {
 			go = true;

@@ -36,17 +36,19 @@
 					<input class="dropdown-action mini" title="5 min until event end notification" type="checkbox" id="preEndNotifications" name="preEndNotifications">
 					<span class="dropdown-action" title="5 min until event end notification">5 minutes until end</span>
 				</label>
-				<label class="dropdown-content" for="voiceName">
+				<label class="dropdown-content" for="voiceChoice">
 					<span class="dropdown-action" title="Notification voice name">Voice: </span>
 					<select name="voiceChoice" id="voiceChoice">
 					</select>
 					<button class="dropdown-action" id="testVoice" title="Test notification voice">Test</button>
 				</label>
+				<span class="dropdown-content" title="Notification intro text">Intro text: </span>
+				<label class="dropdown-content" for="introText">
+					<textarea style="width: 35em; height: 20em;" name="introText" id="introText"></textarea>
+				</label>
 
 			</div>
 		</div>
-
-
 		<h3 id="current-time" class="floating-content"></h3>
 	</div>
 	<div id="content">
@@ -58,7 +60,6 @@
 				<div class="ten columns">
 	      	<canvas id="drawCanvas" width="1200px", height="1200px"></canvas>
 				</div>
-
 			</div>
       <a id="FAQLink" href="#">FAQ</a>
     </div>
