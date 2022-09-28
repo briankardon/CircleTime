@@ -96,7 +96,7 @@ $(function () {
 
   repopulateVoiceNames();
 
-  introText = localStorage.getItem('introText');
+  introText = JSON.parse(localStorage.getItem('introText'));
   if (introText == undefined) {
     introText = defaultIntroText;
   }
@@ -105,7 +105,7 @@ $(function () {
 
   $('#introText').on('change', function () {
     introText = $('#introText').val().split('\n');
-    localStorage.setItem('introText', introText);
+    localStorage.setItem('introText', JSON.stringify(introText));
   });
 
   voiceIdx = localStorage.getItem('voiceIdx');
