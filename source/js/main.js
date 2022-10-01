@@ -100,7 +100,7 @@ $(function () {
   if (introText == undefined) {
     introText = defaultIntroText;
   }
-  console.log('introText is', introText, typeof(introText));
+
   $('#introText').val(introText.join('\n'))
 
   $('#introText').on('change', function () {
@@ -360,7 +360,7 @@ function setUpModal() {
 	// Modal starts out hidden:
 	modal.style.display = "none";
 	// Get the button that opens the modal
-	var FAQlink = document.getElementById("FAQLink");
+	var FAQlink = document.getElementById("faq-link");
 	// Get the <span> element that closes the modal:
 	var closeButton = document.getElementById("closeButton");
 	// When the user clicks on the button, open the modal:
@@ -544,17 +544,49 @@ function parseSchedule() {
 	let startTime, stopTime;
 	let text;
 	let j;
+  let pattern = /^\ *([0-9]{1,2}(?:\:[0-9]{2})?[apm]*)(?:\(([0-9+-\.\ ,]+)\))?(?:\ ?-\ ?([0-9]{1,2}(?:\:[0-9]{2})?[apm]*)(?:\(([0-9+-\.\ ,]+)\))?)?\ ([a-zA-Z0-9\ \.\,\!]+)/;
+
 	for (let k = 0; k < scheduleLines.length; k++) {
 		scheduleLine = scheduleLines[k];
-		scheduleLine = scheduleLine.split(/ +/);
-		timing = scheduleLine[0];
-		text = scheduleLine.slice(1).join(' ');
+
+    scheduleParts = scheduleLine.match(pattern);
+
+    if (scheduleParts == undefined) {
+      continue;
+    }
+
+    startTimeStamp = scheduleParts[1];
+    stopTimeStamp = scheduleParts[3];
+
+    startReminders = scheduleParts[2];
+    stopReminders = scheduleParts[4];
+
+    if (startReminders == undefined) {
+      startReminders = [];
+    } else {
+      startReminders = startReminders.split(',').map(x => parseInt(x));
+    }
+    if (stopReminders == undefined) {
+      stopReminders = [];
+    } else {
+      stopReminders = stopReminders.split(',').map(x => parseInt(x));
+    }
+
+    if (startReminders.some(x => isNaN(x))) {
+      continue;
+    }
+    if (stopReminders.some(x => isNaN(x))) {
+      continue;
+    }
+
+    text = scheduleParts[5];
+
 		if (text.length == 0) {
 			continue;
 		}
-		[startTimeStamp, stopTimeStamp] = timing.split('-');
+
 		startTime = parseTimeStamp(startTimeStamp);
-		stopTime = parseTimeStamp(stopTimeStamp);
+		stopTime  = parseTimeStamp(stopTimeStamp);
 
 		if (startTime == undefined) {
 			continue;
@@ -564,6 +596,8 @@ function parseSchedule() {
 		schedule[j] = {};
 		schedule[j].start = parseTimeStamp(startTimeStamp);
 		schedule[j].stop = parseTimeStamp(stopTimeStamp);
+    schedule[j].startReminders = startReminders;
+    schedule[j].stopReminders = stopReminders;
 		schedule[j].text = text;
     schedule[j].ring = 0;
     schedule[j].ringSpan = 1;
@@ -721,40 +755,58 @@ function notify() {
 	let currentTime = getSecondsSinceMidnight();
 	let timeUntilStart;
 	let timeUntilEnd;
-	let timeUntil5MinFromEnd;
 	let utterance;
+  let deltaTs;
+  let intro;
+  let script = [];
+  let voiceIdx = $('#voiceChoice').val();
 
 	for (let eventA of schedule) {
 		timeUntilStart = eventA.start - currentTime;
 		timeUntilEnd = eventA.stop - currentTime;
-		timeUntil5MinFromEnd = timeUntilEnd - 60*5;
-		let intro;
-		let go = false;
-		if ($('#startNotifications')[0].checked && timeUntilStart >= 0 && timeUntilStart < 1) {
-			go = true;
-			if (eventA.stop == undefined) {
-				// Short-term event
+		if ($('#startNotifications')[0].checked) {
+      if (timeUntilStart >= 0 && timeUntilStart < 1) {
         intro = introText[Math.floor(Math.random() * introText.length)];
-			} else {
-        intro = introText[Math.floor(Math.random() * introText.length)];
-			}
-		} else if ($('#endNotifications')[0].checked && timeUntilEnd >= 3 && timeUntilEnd < 4) {
-			go = true;
-			intro = "Now ending: ";
-		} else if ($('#preEndNotifications')[0].checked && timeUntil5MinFromEnd >= 0 && timeUntil5MinFromEnd < 1 && timeUntilStart < 0) {
-			go = true;
-			intro = "Ending in 5 minutes: ";
+        script[script.length] = intro + eventA.text;
+      }
+      for (let deltaT of eventA.startReminders) {
+        deltaTs = deltaT * 60;
+        if (timeUntilStart + deltaTs >= 0 && timeUntilStart + deltaTs < 1) {
+          if (deltaT < 0) {
+            intro = `Starting in ${Math.abs(deltaT)} minutes: `;
+          } else {
+            intro = `Started ${deltaT} minutes ago: `;
+          }
+          script[script.length] = intro + eventA.text;
+        }
+      }
 		}
-		if (go) {
-			utterance = new SpeechSynthesisUtterance(intro + eventA.text);
-      let voiceIdx = $('#voiceChoice').val();
-      utterance.voice = voices[voiceIdx];
-			audio.onended = function (event) {
-				speechSynthesis.speak(utterance);
-			}
-			audio.play();
-		}
+    if ($('#endNotifications')[0].checked) {
+      if (timeUntilEnd >= 0 && timeUntilEnd < 1) {
+  			intro = "Now ending: ";
+        script[script.length] = intro + eventA.text;
+		  }
+      for (let deltaT of eventA.stopReminders) {
+        deltaTs = deltaT * 60;
+        if (timeUntilEnd + deltaTs >= 0 && timeUntilEnd + deltaTs < 1) {
+          if (deltaT < 0) {
+            intro = `Ending in ${Math.abs(deltaT)} minutes: `;
+          } else {
+            intro = `Ended ${deltaT} minutes ago: `;
+          }
+          script[script.length] = intro + eventA.text;
+        }
+      }
+    }
 	}
+  if (script.length > 0) {
+    utterance = new SpeechSynthesisUtterance(script.join('. '));
+    utterance.voice = voices[voiceIdx];
+    audio.onended = function (event) {
+      speechSynthesis.speak(utterance);
+    }
+    audio.play();
+  }
 }
 
 // *************** CANVAS FUNCTIONS ******************
@@ -818,8 +870,8 @@ function drawDaylight(r) {
 	// drawCtx.rotate(a);
 
 	let gradient = drawCtx.createLinearGradient(r*Math.cos(a), r*Math.sin(a), -r*Math.cos(a), -r*Math.sin(a));
-	gradient.addColorStop(0.05, "#000044");
-	gradient.addColorStop(1.00, "#a0a000");
+	gradient.addColorStop(0.4, "#000044");
+	gradient.addColorStop(1.00, "#fcba02");
 
   drawCtx.beginPath();
   drawCtx.arc(0, 0, r, 0, 2*Math.PI, false);

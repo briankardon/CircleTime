@@ -26,15 +26,11 @@
 			<div id="preset-list" class="dropdown-contents">
 				<label class="dropdown-content" for="startNotifications">
 					<input class="dropdown-action mini" title="Event start notification" type="checkbox" id="startNotifications" name="startNotifications" checked>
-					<span class="dropdown-action" title="Event start notification">Start</span>
+					<span class="dropdown-action" title="Event start notification">Enable start notifications</span>
 				</label>
 				<label class="dropdown-content" for="endNotifications">
 					<input class="dropdown-action mini" title="Event end notification" type="checkbox" id="endNotifications" name="endNotifications">
-					<span class="dropdown-action" title="Event end notification">End</span>
-				</label>
-				<label class="dropdown-content" for="preEndNotifications">
-					<input class="dropdown-action mini" title="5 min until event end notification" type="checkbox" id="preEndNotifications" name="preEndNotifications">
-					<span class="dropdown-action" title="5 min until event end notification">5 minutes until end</span>
+					<span class="dropdown-action" title="Event end notification">Enable end notifications</span>
 				</label>
 				<label class="dropdown-content" for="voiceChoice">
 					<span class="dropdown-action" title="Notification voice name">Voice: </span>
@@ -46,9 +42,9 @@
 				<label class="dropdown-content" for="introText">
 					<textarea style="width: 35em; height: 20em;" name="introText" id="introText"></textarea>
 				</label>
-
 			</div>
 		</div>
+		<h4 id="faq-link" class="floating-content buttonish">Help</h4>
 		<h3 id="current-time" class="floating-content"></h3>
 	</div>
 	<div id="content">
@@ -61,7 +57,6 @@
 	      	<canvas id="drawCanvas" width="1200px", height="1200px"></canvas>
 				</div>
 			</div>
-      <a id="FAQLink" href="#">FAQ</a>
     </div>
 
     <div class="footer" id="footer">
@@ -83,7 +78,32 @@
   		<span id="closeButton">&times;</span>
   		<h2>CircleTime</h2>
   		<h4>What is this?</h4>
-  		<p>TBD</p>
+  		<p>This is CircleTime, a tool for helping people visualize a schedule, and keep track of it throughout the day.</p>
+			<p>The circle represents one day, from midnight to midnight.</p>
+			<h4>I can't see the part of the schedule I want to see.</h4>
+  		<p>Holding shift and using the arrow keys navigates around the schedule.</p>
+			<p>Shift+Up    = zoom in</p>
+			<p>Shift+Down  = zoom out</p>
+			<p>Shift+Right = Rotate time so you can see earlier events</p>
+			<p>Shift+Left  = Rotate time so you can see later events</p>
+			<h4>How do you add an event?</h4>
+  		<p>The box on the left is for writing the events you want to appear on the circle of time.</p>
+			<p>The basic syntax is:</p>
+			<p>&lt;startTime&gt;-&lt;endTime&gt; &lt;description&gt;.</p>
+			<p>Where startTime is the time an event starts, such as 10:00am, endTime is the time an event ends, such as 1pm and description is how you want the event to be labeled on the circle, and possible audibly announced.</p>
+			<p>Examples:</p>
+			<p>9a-10:30a Dad to dentist</p>
+			<p>10:00am-11:00am Soccer</p>
+			<p>1p-2p Meeting</p>
+			<p>If you only provide one time, it will be treated as a short term event, and will be displayed as such, for eaxmple:</p>
+			<p>3p Leave now</p>
+			<p>6p Preheat oven</p>
+			<p>It's also possible to add extra voice reminders relative to either the start or end of an event, for example:</p>
+			<p>9a(-5)-10:30a Dad to dentist (Adds a reminder that the dentist is starting in 5 minutes at 8:55am)</p>
+			<p>10:00am-11:00am(-10) Soccer (Adds a reminder at 10:50 that Soccer will end in 10 min)</p>
+			<p>1p(-5,+5,+10)-2p Meeting (Adds three reminders about the meeting, one at 12:55, one at 1:05, and one at 1:10)</p>
+			<h4>Why did you make this?</h4>
+  		<p>I have a terrible sense of time, and find it genuinely difficult to visualize how a daily schedule is arranged, so it's helpful to me and my children. It also provides a neutral arbiter of the schedule that reduces the need for parental nagging.</p>
   	</div>
   </div>
 </div>
