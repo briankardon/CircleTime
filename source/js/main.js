@@ -452,28 +452,29 @@ function touchmoveHandler(e) {
 	mousemoveHandler(e, true);
 }
 
-function mousePointToCanvasPoint(mp) {
+function addCanvasCoords(mp) {
   let canvas = $('#drawCanvas');
   let xScale = canvas.width() / canvas[0].width;
   let yScale = canvas.height() / canvas[0].height;
-  return {
-    x : mp.x - canvas.position().left - dx * xScale,
-    y : mp.y - canvas.position().top  - dy * yScale
-  };
+  mp.cx = mp.x - canvas.position().left - dx * xScale;
+  mp.cy = mp.y - canvas.position().top  - dy * yScale;
+  mp.cw = canvas[0].width;
+  mp.ch = canvas[0].height;
+  return mp;
 }
 
-function mousePointToPolar(mp) {
-  let cp = mousePointToCanvasPoint(mp);
-  cp.r = Math.sqrt(cp.x*cp.x + cp.y*cp.y);
-  cp.a = Math.atan(cp.y / cp.x);
-  if (cp.x < 0) {
+function addPolarCoords(mp) {
+  let cp = addCanvasCoords(mp);
+  cp.r = Math.sqrt(cp.cx*cp.cx + cp.cy*cp.cy);
+  cp.a = Math.atan(cp.cy / cp.cx);
+  if (cp.cx < 0) {
     cp.a += Math.PI;
   }
   cp.a = (cp.a - Math.PI/2).mod(2*Math.PI);
   return cp;
 }
-function mousePointToTime(mp) {
-  let cp = mousePointToPolar(mp);
+function addTimeCoords(mp) {
+  let cp = addPolarCoords(mp);
   cp.t = angleToSeconds(cp.a);
   return cp;
 }
@@ -486,7 +487,7 @@ function mousemoveHandler(evt, isTouch) {
       x : evt.clientX,
       y : evt.clientY
     };
-    let cp = mousePointToTime(mp);
+    let cp = addTimeCoords(mp);
     if (!isDragging) {
       // This is the first motion of a drag
       startDragPoint = cp;
@@ -496,6 +497,11 @@ function mousemoveHandler(evt, isTouch) {
     if (evt.ctrlKey) {
 
     } else {
+      // zoom = cp.zoom;
+      // let wh = $(window).height();
+      // zoom = 5**(2*(wh - cp.y)/wh - 1);
+      //
+      // zoom = cp.zoom;
       timeRotate += cp.t - lastDragPoint.t;
     }
     updateCanvas();
@@ -544,6 +550,7 @@ function parseTimeStamp(timeStamp) {
 	if (timeStamp == undefined) {
 		return undefined;
 	}
+  let originalTimestamp = timeStamp;
 	// Check for am or AM or pm or PM or a or p
 	let pm = false;
 	let amRegex = /[aA][mM]?/;
@@ -570,12 +577,12 @@ function parseTimeStamp(timeStamp) {
 	hour = parseInt(hour);
 	minute = parseInt(minute);
 
-	if (pm) {
+	if (pm && hour < 12) {
 		hour = hour + 12;
 	} else {
 
   }
-
+  console.log(originalTimestamp, '=>', hour, minute);
 	return minute * 60 + hour * 3600;
 }
 
