@@ -577,13 +577,16 @@ function parseTimeStamp(timeStamp) {
 	hour = parseInt(hour);
 	minute = parseInt(minute);
 
-	if (pm && hour < 12) {
-		hour = hour + 12;
+	if (pm) {
+    if (hour != 12) {
+      hour += 12;
+    }
 	} else {
-
+    if (hour == 12) {
+      hour -= 12;
+    }
   }
-  console.log(originalTimestamp, '=>', hour, minute);
-	return minute * 60 + hour * 3600;
+	return (minute * 60 + hour * 3600).mod(86400);
 }
 
 function getDateString() {
@@ -968,8 +971,6 @@ function drawDaylight(r) {
 
 	let a = getMidnightAngle()+Math.PI/2;
 
-	// drawCtx.rotate(a);
-
 	let gradient = drawCtx.createLinearGradient(r*Math.cos(a), r*Math.sin(a), -r*Math.cos(a), -r*Math.sin(a));
 	gradient.addColorStop(0.4, "#000044");
 	gradient.addColorStop(1.00, "#fcba02");
@@ -1015,24 +1016,13 @@ function drawSegment(r1, r2, a1, a2, color) {
   drawCtx.arc(0, 0, r1+borderWidth, da-angleBorder, angleBorder,    true);
   drawCtx.arc(0, 0, r2,             angleBorder,    da-angleBorder, false);
 
-	// drawCtx.arc(0, 0, r1+borderWidth, da, 0, true);
-  // drawCtx.arc(0, 0, r2-borderWidth, 0, da, false);
-
   drawCtx.closePath();
 	drawCtx.fill();
-  // drawCtx.stroke();
 	drawCtx.restore();
 }
 
 function makeAnglesComparable(a1, a2) {
-	let angles = [a1, a2].sort();
-	let delta1 = angles[1] - angles[0];
-	let delta2 = angles[0] + 2 * Math.PI - angles[1];
-	if (delta1 < delta2) {
-		return angles;
-	} else {
-		return [angles[1], angles[0] + 2 * Math.PI];
-	}
+  return [a1.mod(2*Math.PI), a2.mod(2*Math.PI)]
 }
 
 function meanAngle(a1, a2) {
@@ -1058,8 +1048,6 @@ function drawShortEvent(r1, r2, t, text) {
 	drawCtx.save();
 	drawCtx.rotate(a);
 	drawCtx.lineWidth = lineWidth*4;
-	// drawCtx.setLineDash(dash);
-	// drawCtx.strokeStyle = color;
 
 	drawCtx.beginPath();
 	drawCtx.moveTo(-lineWidth*4, r1 - (r2 - r1));
