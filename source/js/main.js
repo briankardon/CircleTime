@@ -9,7 +9,7 @@ Number.prototype.mod = function (n) {
 // ***************** STARTUP ********************
 var drawCanvas;
 var drawCtx;
-var canvasID = 'drawCanvas';
+const canvasID = 'drawCanvas';
 var updateCanvasJobID;
 var zoom = 1.2;
 var schedule;
@@ -22,7 +22,7 @@ var introText = [];
 var isDragging = false;
 var startDragPoint;
 var lastDragPoint;
-var months = [
+const months = [
   'January',
   'February',
   'March',
@@ -36,7 +36,7 @@ var months = [
   'November',
   'December'
 ];
-var weekDays = [
+const weekDays = [
   'Sunday',
   'Monday',
   'Tuesday',
@@ -45,7 +45,7 @@ var weekDays = [
   'Friday',
   'Saturday'
 ];
-var defaultIntroText = [
+const defaultIntroText = [
   "It's time to get cracking on: ",
   "Would you look at the time, it's time for: ",
   "It's jolly well time for: ",
@@ -63,6 +63,44 @@ var defaultIntroText = [
   "Better leg it chaps, it's time for: ",
   "If we don't want this place to go to pot, we'd better get started on: ",
   "You're off your trolley if you don't think it's time for: ",
+]
+const newUserExampleSchedule = [
+`Welcome to CircleTime!
+This is where you can
+enter events for your
+schedule. For example:
+
+7a-7:30a Breakfast
+
+To add a reminder 5 min
+before and after an
+event starts:
+
+8a(-5,+5)-9a Meeting
+
+You can also add
+reminders relative to
+the end of events:
+
+5p-6p(-10) Bake cake
+
+To add an instantaneous
+event:
+
+10a Call mom
+
+Click and drag to zoom
+in/out and to rotate
+the schedule.
+
+Try making your own -
+delete this text and
+add your own schedule!
+
+If you need more help,
+click the "Help" button
+in the nav bar above.
+`
 ]
 
 function getDateEnding(date) {
@@ -383,7 +421,9 @@ function retrieveSchedule(presetName) {
   storedSchedule = localStorage.getItem(id);
   if (storedSchedule != undefined) {
 		$('#schedule').val(storedSchedule);
-	}
+	} else {
+    $('#schedule').val(newUserExampleSchedule);
+  }
   schedule = parseSchedule();
   updateCanvas();
 }
