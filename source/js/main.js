@@ -13,15 +13,15 @@ var canvasID = 'drawCanvas';
 var updateCanvasJobID;
 var zoom = 1.2;
 var schedule;
-var startNotifications = false;
-var endNotifications = false;
-var preEndNotifications = false;
 var audio = new Audio('static/alert.mp3');
 var lastPresetName = "";
 const synth = window.speechSynthesis;
 var voices;
 var voiceIdx = 0;
 var introText = [];
+var isDragging = false;
+var startDragPoint;
+var lastDragPoint;
 var months = [
   'January',
   'February',
@@ -96,30 +96,58 @@ $(function () {
 
   repopulateVoiceNames();
 
+  // Load saved startNotifications checkbox value, and prepare to save changes
+  let startNotifications = JSON.parse(localStorage.getItem('startNotifications'));
+  if (startNotifications != undefined) {
+    $('#startNotifications').prop('checked', startNotifications)
+  }
+  $('#startNotifications').on('change', function () {
+    let startNotifications = $('#startNotifications').prop('checked');
+    localStorage.setItem('startNotifications', JSON.stringify(startNotifications));
+  });
+
+  // Load saved endNotifications checkbox value, and prepare to save changes
+  let endNotifications = JSON.parse(localStorage.getItem('endNotifications'));
+  if (endNotifications != undefined) {
+    $('#endNotifications').prop('checked', endNotifications)
+  }
+  $('#endNotifications').on('change', function () {
+    let endNotifications = $('#endNotifications').prop('checked');
+    localStorage.setItem('endNotifications', JSON.stringify(endNotifications));
+  });
+
+  // Load saved introText value, and prepare to save changes
   introText = JSON.parse(localStorage.getItem('introText'));
   if (introText == undefined) {
     introText = defaultIntroText;
   }
-
   $('#introText').val(introText.join('\n'))
-
   $('#introText').on('change', function () {
     introText = $('#introText').val().split('\n');
     localStorage.setItem('introText', JSON.stringify(introText));
   });
 
+  // Load saved voiceIdx value, and prepare to save changes
   voiceIdx = localStorage.getItem('voiceIdx');
   if (voiceIdx == undefined) {
     voiceIdx = 0;
   } else {
     $('#voiceChoice').val(voiceIdx);
   }
-
   $('#voiceChoice').on('change', function () {
     voiceIdx = $('#voiceChoice').val();
     localStorage.setItem('voiceIdx', voiceIdx);
   });
 
+  // Load saved schedule, and prepare to save changes
+	retrieveSchedule();
+	$('#schedule').on('keyup', function () {
+		saveSchedule();
+		schedule = parseSchedule();
+		});
+	$('#schedule').keyup();
+
+  // Set up "test voice" callback
   $('#testVoice').on('click', function () {
     let utterance = new SpeechSynthesisUtterance("Good day, how can I be of service?");
     let voiceIdx = $('#voiceChoice').val();
@@ -137,14 +165,6 @@ $(function () {
 		});
 	}, 300);
 
-	retrieveSchedule();
-	$('#schedule').on('keyup', function () {
-		saveSchedule();
-		schedule = parseSchedule();
-		});
-
-	$('#schedule').keyup();
-
 	document.body.addEventListener("touchstart", function (e) {
 		if (e.target == drawCanvas) {
 			e.preventDefault();
@@ -161,7 +181,7 @@ $(function () {
 		}
 	}, { passive: false });
 
-  //Keyboard shortcuts:
+  //Set up keyboard commands:
   $(document).keyup(function(e) {
   	let interval;
   	switch(e.key) {
@@ -270,6 +290,20 @@ function presetNameToId(presetName) {
   return id;
 }
 
+function createPresetEmptyPlaceholder() {
+  $('#preset-list').append(
+    $(
+      `
+      <div id="preset-placeholder" class="dropdown-content">
+        <h4 style="color: grey;" class="dropdown-action retrieve-preset">No presets yet</h4>
+      </div>
+      <div id="preset-placeholder" class="dropdown-content">
+        <h4 style="color: grey;" class="dropdown-action retrieve-preset">Press "Save" to create one</h4>
+      </div>`
+    )
+  );
+}
+
 function createPresetElement(presetName) {
   let id = presetNameToId(presetName);
   $('#preset-list').append(
@@ -318,6 +352,9 @@ function repopulatePresetMenu() {
     if (presetNames[k] != '|schedule|') {
       createPresetElement(presetNames[k], presetNames[k]);
     }
+  }
+  if (presetNames.length <= 1) {
+    createPresetEmptyPlaceholder();
   }
 }
 
@@ -415,8 +452,61 @@ function touchmoveHandler(e) {
 	mousemoveHandler(e, true);
 }
 
+function mousePointToCanvasPoint(mp) {
+  let canvas = $('#drawCanvas');
+  let xScale = canvas.width() / canvas[0].width;
+  let yScale = canvas.height() / canvas[0].height;
+  return {
+    x : mp.x - canvas.position().left - dx * xScale,
+    y : mp.y - canvas.position().top  - dy * yScale
+  };
+}
+
+function mousePointToPolar(mp) {
+  let cp = mousePointToCanvasPoint(mp);
+  cp.r = Math.sqrt(cp.x*cp.x + cp.y*cp.y);
+  cp.a = Math.atan(cp.y / cp.x);
+  if (cp.x < 0) {
+    cp.a += Math.PI;
+  }
+  cp.a = (cp.a - Math.PI/2).mod(2*Math.PI);
+  return cp;
+}
+function mousePointToTime(mp) {
+  let cp = mousePointToPolar(mp);
+  cp.t = angleToSeconds(cp.a);
+  return cp;
+}
+
 function mousemoveHandler(evt, isTouch) {
   // Handle mouse move on canvas event
+  if (evt.buttons % 2 == 1) {
+    // Motion with button 1 down
+    let mp = {
+      x : evt.clientX,
+      y : evt.clientY
+    };
+    let cp = mousePointToTime(mp);
+    if (!isDragging) {
+      // This is the first motion of a drag
+      startDragPoint = cp;
+      lastDragPoint = cp;
+      isDragging = true;
+    }
+    if (evt.ctrlKey) {
+
+    } else {
+      timeRotate += cp.t - lastDragPoint.t;
+    }
+    updateCanvas();
+  } else {
+    // Motion without button 1 down
+    if (isDragging) {
+      // This is the first motion after a drag
+      startDragPoint = null;
+      isDragging = false;
+    }
+  }
 }
 
 // *************** TIME FUNCTIONS ********************
@@ -439,6 +529,10 @@ function fractionToAngle(f) {
 
 function getDayAngle(seconds) {
 	return fractionToAngle(getDayFraction(seconds)).mod(2*Math.PI);
+}
+
+function angleToSeconds(angle) {
+  return (angle - getMidnightAngle()) * (86400 / (2*Math.PI));
 }
 
 function getMidnightAngle() {
