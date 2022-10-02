@@ -502,8 +502,10 @@ function mousemoveHandler(evt, isTouch) {
       // zoom = 5**(2*(wh - cp.y)/wh - 1);
       //
       // zoom = cp.zoom;
-      timeRotate += cp.t - lastDragPoint.t;
+      zoom *= (1 + 3*((cp.y - lastDragPoint.y) / $(window).height()));
+      timeRotate += cp.t - startDragPoint.t;
     }
+    lastDragPoint = cp;
     updateCanvas();
   } else {
     // Motion without button 1 down
