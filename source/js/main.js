@@ -189,7 +189,7 @@ $(function () {
   			break;
   		case 'ArrowUp':
   			if (e.shiftKey) {
-  				zoom += dzoom;
+  				zoom = setZoom(zoom + dzoom);
   				updateCanvas();
           e.stopPropagation();
           e.preventDefault();
@@ -197,7 +197,7 @@ $(function () {
   			}
   		case 'ArrowDown':
   			if (e.shiftKey) {
-  				zoom -= dzoom;
+  				zoom = setZoom(zoom - dzoom);
   				updateCanvas();
           e.stopPropagation();
           e.preventDefault();
@@ -502,7 +502,9 @@ function mousemoveHandler(evt, isTouch) {
       // zoom = 5**(2*(wh - cp.y)/wh - 1);
       //
       // zoom = cp.zoom;
-      zoom *= (1 + 3*((cp.y - lastDragPoint.y) / $(window).height()));
+      if (!evt.shiftKey) {
+        setZoom(zoom * (1 + 3*((cp.y - lastDragPoint.y) / $(window).height())));
+      }
       timeRotate += cp.t - startDragPoint.t;
     }
     lastDragPoint = cp;
@@ -940,10 +942,16 @@ function updateTransform() {
 	dzoom = 0.1 * zoom;
 	r2 = r1 + 50 / Math.sqrt(zoom);
 	dx = cx
-	dy = cy + zoom * (((r1 + r2) / 2) * (1 - 2**(1-zoom)));
+	dy = cy + zoom * (((r1 + r2) / 2) * (1 - 2**(0.5-zoom)));
 	fontSize = 24 / zoom;
 	drawCtx.font = fontSize + 'px Arial';
 	lineWidth = 1 / zoom;
+}
+
+function setZoom(newZoom) {
+  newZoom = Math.max(0.6, newZoom);
+  newZoom = Math.min(185, newZoom);
+  zoom = newZoom;
 }
 
 function clearCanvas() {
