@@ -1023,18 +1023,20 @@ function drawSegment(r1, r2, a1, a2, color) {
 	drawCtx.restore();
 }
 
-function makeAnglesComparable(a1, a2) {
-  return [a1.mod(2*Math.PI), a2.mod(2*Math.PI)]
-}
-
 function meanAngle(a1, a2) {
-	[a1, a2] = makeAnglesComparable(a1, a2);
-	return (a1 + a2) / 2;
+  if (a2 < a1) {
+    return (a1.mod(2*Math.PI) + a2.mod(2*Math.PI) + 2*Math.PI)/2;
+  } else {
+    return (a1.mod(2*Math.PI) + a2.mod(2*Math.PI))/2;
+  }
 }
 
 function diffAngle(a1, a2) {
-	[a1, a2] = makeAnglesComparable(a1, a2);
-	return a2 - a1;
+  if (a2 < a1) {
+    return a2.mod(2*Math.PI) + 2*Math.PI - a1.mod(2*Math.PI);
+  } else {
+    return a2.mod(2*Math.PI) - a1.mod(2*Math.PI);
+  }
 }
 
 function drawLongEvent(r1, r2, t1, t2, text, color) {
@@ -1116,7 +1118,13 @@ function drawLabel(r, a, text, color, justify) {
 		// This must be an array of two angles. Size the text to fit within those.
 		let da = diffAngle(a[0], a[1]);
 		a = meanAngle(a[0], a[1]);
-		let availableWidth = r * Math.tan(da);
+		// let availableWidth = r * Math.tan(da);
+    let availableWidth;
+    if (r1 < r && r < r2) {
+      availableWidth = Math.min(2*r*Math.sin(da/2), 2*Math.sqrt(r2**2 - r**2)*0.9);
+    } else {
+      availableWidth = 2*r*Math.sin(da/2);
+    }
 		let shrinkRatio = 0.9 * availableWidth / w;
 		if (shrinkRatio < 1) {
 			if (shrinkRatio > 0.5) {
