@@ -203,21 +203,21 @@ $(function () {
 		});
 	}, 300);
 
-	document.body.addEventListener("touchstart", function (e) {
-		if (e.target == drawCanvas) {
-			e.preventDefault();
-		}
-	},  { passive: false });
-	document.body.addEventListener("touchend", function (e) {
-		if (e.target == drawCanvas) {
-			e.preventDefault();
-		}
-	}, { passive: false });
-	document.body.addEventListener("touchmove", function (e) {
-		if (e.target == drawCanvas) {
-			e.preventDefault();
-		}
-	}, { passive: false });
+	// document.body.addEventListener("touchstart", function (e) {
+	// 	if (e.target == drawCanvas) {
+	// 		e.preventDefault();
+	// 	}
+	// },  { passive: false });
+	// document.body.addEventListener("touchend", function (e) {
+	// 	if (e.target == drawCanvas) {
+	// 		e.preventDefault();
+	// 	}
+	// }, { passive: false });
+	// document.body.addEventListener("touchmove", function (e) {
+	// 	if (e.target == drawCanvas) {
+	// 		e.preventDefault();
+	// 	}
+	// }, { passive: false });
 
   //Set up keyboard commands:
   $(document).keyup(function(e) {
@@ -303,7 +303,7 @@ $(function () {
 	$("#"+canvasID).on('touchmove', touchmoveHandler);
 
 	// Set version number
-	var version = '1.23';
+	var version = '1.24';
 	$("#footer").html($('#footer').html()+version);
 
   // Start update:
@@ -477,6 +477,8 @@ function mouseoutHandler(evt) {
 
 function touchendHandler(evt) {
 	clickHandler(evt, 'end');
+  startDragPoint = null;
+  isDragging = false;
 }
 
 function touchstartHandler(evt) {
@@ -521,12 +523,21 @@ function addTimeCoords(mp) {
 
 function mousemoveHandler(evt, isTouch) {
   // Handle mouse move on canvas event
-  if (evt.buttons % 2 == 1) {
+  console.log(evt);
+  if (evt.buttons % 2 == 1 || isTouch) {
     // Motion with button 1 down
-    let mp = {
-      x : evt.clientX,
-      y : evt.clientY
-    };
+    let mp;
+    if (isTouch) {
+      mp = {
+        x : evt.touches[0].clientX,
+        y : evt.touches[0].clientY
+      };
+    } else {
+      mp = {
+        x : evt.clientX,
+        y : evt.clientY
+      };
+    }
     let cp = addTimeCoords(mp);
     if (!isDragging) {
       // This is the first motion of a drag
