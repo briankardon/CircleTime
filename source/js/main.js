@@ -103,6 +103,122 @@ in the nav bar above.
 `
 ]
 
+function formatTimeColloquial(seconds) {
+  let totalSeconds = seconds;
+  let hours = Math.floor(totalSeconds / 3600);
+  let roundHours = Math.round(totalSeconds / 3600);
+  seconds = seconds - hours*3600;
+  let minutes = Math.floor(seconds / 60);
+  let totalMinutes = Math.floor(totalSeconds / 60);
+  let roundTotalMinutes = Math.round(totalSeconds / 60);
+  seconds = seconds - minutes*60;
+  seconds = Math.round(seconds);
+
+  let secondSuffix;
+  if (seconds == 1) {
+    secondSuffix = '';
+  } else {
+    secondSuffix = 's';
+  }
+  let totalSecondSuffix;
+  if (totalSeconds == 1) {
+    totalSecondSuffix = '';
+  } else {
+    totalSecondSuffix = 's';
+  }
+  let minuteSuffix;
+  if (minutes == 1) {
+    minuteSuffix = '';
+  } else {
+    minuteSuffix = 's';
+  }
+  let hourSuffix;
+  if (hours == 1) {
+    hourSuffix = '';
+  } else {
+    hourSuffix = 's';
+  }
+
+  let timeString;
+  if (totalMinutes < 2) {
+    // Less than 2 minutes left
+    timeString = `${totalSeconds} second${totalSecondSuffix}`;
+  } else if (totalMinutes < 5) {
+    // 2 - 5 minutes left
+    if (seconds == 0) {
+      timeString = `${totalMinutes} minutes`;
+    } else {
+      timeString = `${totalMinutes} minutes and ${seconds} second${secondSuffix}`;
+    }
+  } else if (totalMinutes < 60) {
+    timeString = `${roundTotalMinutes} minutes`;
+  } else if (hours < 2) {
+    if (minutes == 0) {
+      timeString = `${hours} hour${hourSuffix}`;
+    } else {
+      timeString = `${hours} hour${hourSuffix} and ${minutes} minute${minuteSuffix}`;
+    }
+  } else if (hours < 4) {
+    switch (Math.round(minutes*4/60)) {
+      case 0:
+        timeString = `${hours} hours`;
+        break;
+      case 1:
+        timeString = `${hours} and a quarter hours`;
+        break;
+      case 2:
+        timeString = `${hours} and a half hours`;
+        break;
+      case 3:
+        timeString = `${roundHours} hours`;
+        break;
+      default:
+        timeString = `${hours} hour${hourSuffix} and ${minutes} minute${minuteSuffix}`;
+        break;
+    }
+  } else {
+    timeString = `${roundHours} hours`;
+  }
+  return timeString;
+}
+
+function sayEventStatus(eventA) {
+  let script;
+  let now = getSecondsSinceMidnight();
+  if (eventA.stop != undefined) {
+    // Not an instantaneous event
+    let secondsSinceStart = now - eventA.start;
+    let timeSinceStart = formatTimeColloquial(Math.abs(secondsSinceStart));
+    let secondsUntilStop = eventA.stop - now;
+    let timeUntilStop = formatTimeColloquial(Math.abs(secondsUntilStop));
+    if (eventA.start <= now && now <= eventA.stop) {
+      // Event is currently ongoing
+      script = `${eventA.text} started ${timeSinceStart} ago, with ${timeUntilStop} remaining.`;
+    } else if (now < eventA.start) {
+      // Event has not yet started
+      script = `${eventA.text} will start in ${timeSinceStart}`;
+    } else if (now > eventA.stop) {
+      // Event has already ended
+      script = `${eventA.text} ended ${timeUntilStop} ago`;
+    }
+  } else {
+    // An instantaneous event
+    let secondsSinceStart = now - eventA.start;
+    let timeSinceStart = formatTimeColloquial(secondsSinceStart);
+    if (eventA.start <= now) {
+      // Event already passed
+      script = `${eventA.text} was ${timeSinceStart} ago`;
+    } else {
+      // Event has not occurred yet
+      script = `${eventA.text} will be in ${-timeSinceStart}`;
+    }
+  }
+  let utterance = new SpeechSynthesisUtterance(script);
+  let voiceIdx = $('#voiceChoice').val();
+  utterance.voice = voices[voiceIdx];
+  speechSynthesis.speak(utterance);
+}
+
 function getDateEnding(date) {
   if (date == 1) {
     return 'st';
@@ -476,17 +592,39 @@ function mouseoutHandler(evt) {
 }
 
 function touchendHandler(evt) {
-	clickHandler(evt, 'end');
+	clickHandler(evt, true, 'end');
   startDragPoint = null;
   isDragging = false;
 }
 
 function touchstartHandler(evt) {
-	clickHandler(evt, 'start');
+	clickHandler(evt, true, 'start');
 }
 
-function clickHandler(evt, touchType) {
+function clickHandler(evt, isTouch, touchType) {
   // Handle click on canvas
+  if (isDragging) {
+    return;
+  }
+  let cp;
+  if (isTouch) {
+    cp = getCoordinates(evt.touches[0].clientX, evt.touches[0].clientY);
+  } else {
+    cp = getCoordinates(evt.clientX, evt.clientY);
+  }
+  let rA, rB;
+  let dt;
+  let now;
+  for (let eventA of schedule) {
+    [rA, rB] = getRadialLimits(r1, r2, eventA.ring, eventA.ringSpan, eventA.numRings);
+    if (eventA.start < cp.t && cp.t < eventA.stop) {
+      if (rA < cp.r && cp.r < rB) {
+        sayEventStatus(eventA);
+        break;
+      }
+    }
+  }
+
 }
 
 function touchmoveHandler(e) {
@@ -494,51 +632,42 @@ function touchmoveHandler(e) {
 	mousemoveHandler(e, true);
 }
 
-function addCanvasCoords(mp) {
+function getCoordinates(wx, wy) {
+  // wx = window x coordinate
+  // wy = window y coordinate
   let canvas = $('#drawCanvas');
   let xScale = canvas.width() / canvas[0].width;
   let yScale = canvas.height() / canvas[0].height;
-  mp.cx = mp.x - canvas.position().left - dx * xScale;
-  mp.cy = mp.y - canvas.position().top  - dy * yScale;
-  mp.cw = canvas[0].width;
-  mp.ch = canvas[0].height;
-  return mp;
-}
 
-function addPolarCoords(mp) {
-  let cp = addCanvasCoords(mp);
-  cp.r = Math.sqrt(cp.cx*cp.cx + cp.cy*cp.cy);
-  cp.a = Math.atan(cp.cy / cp.cx);
-  if (cp.cx < 0) {
-    cp.a += Math.PI;
+  let cx = wx - canvas.position().left - dx * xScale;
+  let cy = wy - canvas.position().top  - dy * yScale;
+  let a = Math.atan(cy / cx) - Math.PI/2;
+  if (cx < 0) {
+    a += Math.PI;
   }
-  cp.a = (cp.a - Math.PI/2).mod(2*Math.PI);
-  return cp;
-}
-function addTimeCoords(mp) {
-  let cp = addPolarCoords(mp);
-  cp.t = angleToSeconds(cp.a);
-  return cp;
+
+  let p = {
+    x: wx,
+    y: wy,
+    cx: cx,
+    cy: cy,
+    r: Math.sqrt(cx*cx/(xScale*xScale*sx*sx) + cy*cy/(yScale*yScale*sy*sy)),
+    a: a,
+    t: angleToSeconds(a)
+  }
+  return p;
 }
 
 function mousemoveHandler(evt, isTouch) {
   // Handle mouse move on canvas event
-  console.log(evt);
   if (evt.buttons % 2 == 1 || isTouch) {
     // Motion with button 1 down
-    let mp;
+    let cp;
     if (isTouch) {
-      mp = {
-        x : evt.touches[0].clientX,
-        y : evt.touches[0].clientY
-      };
+      cp = getCoordinates(evt.touches[0].clientX, evt.touches[0].clientY);
     } else {
-      mp = {
-        x : evt.clientX,
-        y : evt.clientY
-      };
+      cp = getCoordinates(evt.clientX, evt.clientY);
     }
-    let cp = addTimeCoords(mp);
     if (!isDragging) {
       // This is the first motion of a drag
       startDragPoint = cp;
@@ -593,7 +722,7 @@ function getDayAngle(seconds) {
 }
 
 function angleToSeconds(angle) {
-  return (angle - getMidnightAngle()) * (86400 / (2*Math.PI));
+  return ((angle - getMidnightAngle()) * (86400 / (2*Math.PI))).mod(86400);
 }
 
 function getMidnightAngle() {
@@ -873,11 +1002,10 @@ function drawSchedule() {
 		return;
 	}
 
-  let rA, rB, dR;
+  let rA, rB;
   let overlapGroup;
   let eventA;
   let colorIdx = 0;
-  let borderWidth = lineWidth*4;
 
 
 	for (let eventA of schedule) {
@@ -896,9 +1024,7 @@ function drawSchedule() {
 			}
 		}
 		if (eventA.stop != undefined) {
-      dR = (r2 - r1 - borderWidth) / (eventA.numRings);
-      rA = r1 + eventA.ring * dR;
-      rB = rA + dR * eventA.ringSpan;
+      [rA, rB] = getRadialLimits(r1, r2, eventA.ring, eventA.ringSpan, eventA.numRings);
 			drawLongEvent(rA, rB, eventA.start, eventA.stop, eventA.text, color);
       colorIdx += 1;
 		} else {
@@ -907,13 +1033,21 @@ function drawSchedule() {
 	}
 }
 
+function getRadialLimits(r1, r2, ring, ringSpan, numRings) {
+  let borderWidth = lineWidth*4;
+  let dR = (r2 - r1 - borderWidth) / (numRings);
+  let rA = r1 + ring * dR;
+  let rB = rA + dR * ringSpan;
+  return [rA, rB];
+}
+
 function notify() {
 	if (schedule == undefined) {
 		return;
 	}
 	let currentTime = getSecondsSinceMidnight();
 	let timeUntilStart;
-	let timeUntilEnd;
+	let timeUntilStop;
 	let utterance;
   let deltaTs;
   let intro;
@@ -922,7 +1056,7 @@ function notify() {
 
 	for (let eventA of schedule) {
 		timeUntilStart = eventA.start - currentTime;
-		timeUntilEnd = eventA.stop - currentTime;
+		timeUntilStop = eventA.stop - currentTime;
 		if ($('#startNotifications')[0].checked) {
       if (timeUntilStart >= 0 && timeUntilStart < 1) {
         intro = introText[Math.floor(Math.random() * introText.length)];
@@ -941,13 +1075,13 @@ function notify() {
       }
 		}
     if ($('#endNotifications')[0].checked) {
-      if (timeUntilEnd >= 0 && timeUntilEnd < 1) {
+      if (timeUntilStop >= 0 && timeUntilStop < 1) {
   			intro = "Now ending: ";
         script[script.length] = intro + eventA.text;
 		  }
       for (let deltaT of eventA.stopReminders) {
         deltaTs = deltaT * 60;
-        if (timeUntilEnd + deltaTs >= 0 && timeUntilEnd + deltaTs < 1) {
+        if (timeUntilStop + deltaTs >= 0 && timeUntilStop + deltaTs < 1) {
           if (deltaT < 0) {
             intro = `Ending in ${Math.abs(deltaT)} minutes: `;
           } else {
