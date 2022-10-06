@@ -343,7 +343,7 @@ $(function () {
   			break;
   		case 'ArrowUp':
   			if (e.shiftKey) {
-  				zoom = setZoom(zoom + dzoom);
+  				setZoom(zoom + dzoom);
   				updateCanvas();
           e.stopPropagation();
           e.preventDefault();
@@ -351,7 +351,7 @@ $(function () {
   			}
   		case 'ArrowDown':
   			if (e.shiftKey) {
-  				zoom = setZoom(zoom - dzoom);
+  				setZoom(zoom - dzoom);
   				updateCanvas();
           e.stopPropagation();
           e.preventDefault();
