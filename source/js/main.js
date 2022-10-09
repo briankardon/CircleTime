@@ -1201,10 +1201,15 @@ function drawSegment(r1, r2, a1, a2, color) {
 	} else {
 		fillStyle = color;
 	}
+  let borderWidth = lineWidth*4;
+	let angleBorder = Math.atan(borderWidth / r1)/2;
+  if (Math.abs(angleBorder)*2 >= da) {
+    // THis segment is smaller than the border.
+    angleBorder = 0;
+  }
+
 	drawCtx.save();
 	drawCtx.rotate(a1+Math.PI/2);
-	let borderWidth = lineWidth*4;
-	let angleBorder = Math.atan(borderWidth / r1)/2;
 	drawCtx.fillStyle = fillStyle;
   drawCtx.beginPath();
 
